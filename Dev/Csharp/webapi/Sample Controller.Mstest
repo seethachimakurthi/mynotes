@@ -1,0 +1,120 @@
+using System;
+using System.Text;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using webAPITest.Models;
+using webAPITest.Controllers;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Web.Http.Results;
+using System.Diagnostics;
+
+namespace webAPITest.Tests
+{
+    //shows a way to unit test web api async tasks;
+    //https://dzone.com/articles/unit-testing-asynchronous-web
+    /// <summary>
+    /// Summary description for TestProductController
+    /// </summary>
+    [TestClass]
+    public class TestProductController
+    {
+
+        MockRepository repository;
+        ProductsController productController;
+        
+        public TestProductController()
+        {
+            //
+            // TODO: Add constructor logic here
+            //
+        }
+
+        //private TestContext testContextInstance;
+
+        ///// <summary>
+        /////Gets or sets the test context which provides
+        /////information about and functionality for the current test run.
+        /////</summary>
+        //public TestContext TestContext
+        //{
+        //    get
+        //    {
+        //        return testContextInstance;
+        //    }
+        //    set
+        //    {
+        //        testContextInstance = value;
+        //    }
+        //}
+
+        #region Additional test attributes
+        //
+        // You can use the following additional attributes as you write your tests:
+        //
+        // Use ClassInitialize to run code before running the first test in the class
+        // [ClassInitialize()]
+        // public static void MyClassInitialize(TestContext testContext) { }
+        //
+        // Use ClassCleanup to run code after all tests in a class have run
+        // [ClassCleanup()]
+        // public static void MyClassCleanup() { }
+        //
+        // Use TestInitialize to run code before running each test 
+        [TestInitialize()]
+        public void InitializeForTest() {
+            repository = new MockRepository();
+            productController = new ProductsController(repository);
+        }
+
+        // Use TestCleanup to run code after each test has run
+        // [TestCleanup()]
+        // public void MyTestCleanup() { }
+        //
+        #endregion
+
+     
+
+        [TestMethod]
+        public async Task GetProducts_should_Return_List_Of_Contacts() {
+
+            var products = await productController.GetProductsAsync();
+            Assert.AreEqual(products.Count(), 3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task GetProduct_Should_Throw_Exception()
+        {
+            repository.FailGet = true;
+            var products = await productController.GetProductsAsync();
+        }
+
+        //check the IHttpResult
+        [TestMethod]
+        public async Task GetProductsHttpActionResult_Should_return_HttpResult_with_Products()
+        {
+            var productsResult = await productController.GetProductsHttpActionResultAsync() as OkNegotiatedContentResult<IEnumerable<Product>>;
+            Assert.AreEqual(productsResult.Content.Count(), 3);
+        }
+
+        //[TestMethod]
+        //public async Task GetProductsHttpActionResult_Throw_Exception()
+        //{
+        //    repository.FailGet = true;
+        //    var productsResult = await productController.GetProductsHttpActionResultAsync() as ExceptionResult;
+        //    Debug.WriteLine(productsResult.Exception.Message);
+        //    Assert.IsInstanceOfType(productsResult.Exception,typeof(InvalidOperationException));
+        //}
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public async Task GetProductsHttpActionResult_Throw_Exception()
+        {
+            repository.FailGet = true;
+            var productsResult = await productController.GetProductsHttpActionResultAsync() as ExceptionResult;
+          
+        }
+    }
+}
